@@ -3,7 +3,7 @@
   "description": "Demo PHP app running on Cloudflare Containers via FrankenPHP",
   "type": "project",
   "require": {
-    "php": "^8.3"
+    "php": "^8.4"
   },
   "autoload": {
     "psr-4": {

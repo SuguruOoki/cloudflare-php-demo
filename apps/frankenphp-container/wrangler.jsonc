@@ -13,7 +13,13 @@
       "class_name": "AppContainer",
       "image": "./Dockerfile",
       "max_instances": 10,
-      "instance_type": "basic"
+      "instance_type": "basic",
+      // Cloudflare Containers は 2026/04 時点で city 粒度の固定不可。
+      // APAC 地域グループ (東京/大阪/シンガポール/ソウル/シドニー等) に絞り、
+      // NRT/KIX エッジからのリクエスト時は近接拠点に自動配置される。
+      "constraints": {
+        "regions": ["APAC"]
+      }
     }
   ],
 

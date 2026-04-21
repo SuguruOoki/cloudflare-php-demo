@@ -1,4 +1,4 @@
-FROM dunglas/frankenphp:1-php8.3-alpine
+FROM dunglas/frankenphp:1-php8.4-alpine
 
 # PHP 拡張（Laravel や一般的な PHP アプリの最低限）
 RUN install-php-extensions \

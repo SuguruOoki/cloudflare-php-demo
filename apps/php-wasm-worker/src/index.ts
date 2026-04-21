@@ -1,10 +1,13 @@
 /**
- * PHP on Cloudflare Workers — Demo Landing
+ * PHP on Cloudflare Workers — Demo Landing (PHP 8.4 対象)
  *
- * 注: 実際に PHP を Worker 内で実行するには @php-wasm/universal に加えて
- *     PHPローダーモジュール (.wasm) のバンドリングが必要。
- *     このデモでは "3アプローチの入口" として Worker をデプロイし、
- *     実PHP実行は apps/frankenphp-container/ 側で確認する。
+ * 注: 2026/04 時点で @php-wasm/web-8-4 / @php-wasm/node-8-4 はいずれも
+ *     57MB 程度の配布サイズで、Cloudflare Workers の上限（有料 10MB zipped）に
+ *     収まらない。このため実 PHP 実行は apps/frankenphp-container/ 側で行い、
+ *     Worker は「3アプローチの入口 + エッジ情報」を返す構成とする。
+ *
+ * PHP 8.4 の実体に触れたい場合は:
+ *     https://cloudflare-php-container-demo.suguru-ohki.workers.dev/api/hello
  */
 
 export interface Env {}
@@ -25,8 +28,8 @@ const HTML = `<!doctype html>
   </style>
 </head>
 <body>
-  <h1>🐘 PHP on Cloudflare <span class="tag">Demo</span></h1>
-  <p>「Cloudflare で PHP は動かない」は、もう古い。3つのアプローチで動きます。</p>
+  <h1>🐘 PHP 8.4 on Cloudflare <span class="tag">Demo</span></h1>
+  <p>「Cloudflare で PHP は動かない」は、もう古い。3つのアプローチで動きます（本デモは PHP 8.4 を対象）。</p>
 
   <h2>3つのアプローチ</h2>
   <ul>
@@ -59,9 +62,11 @@ export default {
 
     if (url.pathname === '/api/hello') {
       return Response.json({
-        message: 'Hello from Cloudflare Workers!',
-        note: '本番では php-wasm 経由で PHP が動くよう差し替え可能',
+        message: 'Hello from Cloudflare Workers edge!',
+        target_php_version: '8.4',
+        note: 'Worker 上で php-wasm (PHP 8.4) を直接動かすには配布サイズ 57MB が Workers 上限(10MB)を超える。実 PHP 8.4 実行は Container 側で。',
         runtime: 'V8 isolate (Workers)',
+        container_demo_url: 'https://cloudflare-php-container-demo.suguru-ohki.workers.dev/api/hello',
         colo: req.cf?.colo ?? 'unknown',
         country: req.cf?.country ?? 'unknown',
         timestamp: new Date().toISOString(),
@@ -84,6 +89,7 @@ export default {
 
     if (url.pathname === '/api/approaches') {
       return Response.json({
+        php_version: '8.4',
         approaches: [
           {
             id: 'A',
@@ -91,13 +97,15 @@ export default {
             runtime: 'Workers (V8 isolate) + WebAssembly',
             example: 'WordPress Playground',
             best_for: '軽量・WP 系・コールドスタート命',
+            caveat: '2026/04 時点で @php-wasm/web-8-4 は 57MB、Workers 上限 10MB を超過',
           },
           {
             id: 'B',
             name: 'Containers + FrankenPHP',
-            runtime: 'Cloudflare Containers',
+            runtime: 'Cloudflare Containers (APAC region / PHP 8.4)',
             example: 'Laravel / Symfony',
             best_for: 'フルスタック PHP アプリ（本番向け本命）',
+            live_endpoint: 'https://cloudflare-php-container-demo.suguru-ohki.workers.dev',
           },
           {
             id: 'C',
