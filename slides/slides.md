@@ -507,31 +507,48 @@ export default {
 
 ---
 
-## 「パーツ無いじゃん」問題: 認証・メール
+## 「パーツ無いじゃん」問題 ①: 🔐 認証
 
-### 🔐 認証
 | 選択肢 | 用途 |
 |---|---|
 | **Cloudflare Access**（Zero Trust） | 社内ツール / SSO / IdP 連携 |
-| **Laravel Sanctum / Breeze そのまま** | トークンを D1 / KV に置けば動く |
+| **Laravel Sanctum / Breeze そのまま** | トークン保存先を D1 / KV に差し替え |
 | **Clerk / Auth0 / WorkOS** | マネージド（DX 重視） |
 
-### 📧 メール送信
-- **Cloudflare 単体で送信サービスは無い**（Email Routing は受信のみ）
-- → **外部 API を Workers / Container から HTTP で叩く**
-- **Resend** / Postmark / SendGrid / Amazon SES / Mailgun
-- Laravel は `MAIL_MAILER=resend` 等でドライバ差し替えのみ
+### Laravel Sanctum の場合の最小変更
+`.env` の `SESSION_DRIVER=database` を `DB_CONNECTION=sqlite`（D1）に合わせるだけ。
+**コード変更はほぼゼロ。**
 
-### 割り切り
-「足りないパーツ = **外部 API を HTTP で叩く**」
+<!--
+"Sanctum そのまま動く" が PHPer の一番の安心材料。
+Cloudflare Access は社内ツール限定の話なので、アプリ認証とは別軸と口頭補足。
+-->
+
+---
+
+## 「パーツ無いじゃん」問題 ②: 📧 メール送信
+
+### Cloudflare 単体に送信機能は無い
+- Email Routing は **受信専用**
+- 送信は **外部 API を Workers / Container から HTTP で叩く** 一択
+
+### 推奨サービス（Laravel 公式ドライバ or HTTP）
+**Resend** / Postmark / SendGrid / Amazon SES / Mailgun
+
+```env
+# Laravel なら .env を差し替えるだけ
+MAIL_MAILER=resend
+RESEND_KEY=re_xxxx
+```
+
+### 結論: 足りないパーツ = **外部 API を HTTP で叩く**
 PHP のエコシステムはそのまま活きる
 
 <!--
-PHPer が必ず聞きたくなる実務質問: 「認証は？」「メールは？」。
+PHPer が必ず聞きたくなる実務質問: 「メールは？」。
 Cloudflare 単体で完結しない事実を正直に出しつつ、
 "HTTP API で繋ぐだけ"という割り切りで不安を消す。
-Resend は最近 Laravel 公式ドライバも入り DX 最良。会場で一言推しても良い。
-Laravel Sanctum はトークン保存先を D1/KV に変えるだけでそのまま動く点を強調。
+Resend は 2024-2025 に Laravel 公式ドライバが入り DX 最良。会場で一言推しても良い。
 -->
 
 ---
@@ -653,6 +670,10 @@ timeout  短 (1-5s)                     長 (20-30s)
 用途     通知・チャット・速報           CSV一括・夜間集計・メール配信
 ```
 
+---
+
+## batch_size / batch_timeout: 設計指針
+
 ### 実務の出発点
 - とりあえず **`size=10, timeout=30`** で始める
 - レイテンシ遅い → size と timeout を小さく
@@ -662,6 +683,7 @@ timeout  短 (1-5s)                     長 (20-30s)
 スループットとレイテンシのトレードオフが一目で分かる表。
 登壇では「通知系か集計系か」でダイヤルの向きが逆、と口頭で補足する。
 -->
+
 
 ---
 
@@ -787,11 +809,11 @@ Sentry がそのまま動くのは PHPer の安心材料。
 
 ## 今日持ち帰ってほしい3つ
 
-## 1. PHP は Cloudflare で**動く**
+### 1. PHP は Cloudflare で**動く**
 
-## 2. Laravel なら **Containers + FrankenPHP** が本命
+### 2. Laravel なら **Containers + FrankenPHP** が本命
 
-## 3. 既存本番でも **Workers 前段**で即効レイテンシ改善
+### 3. 既存本番でも **Workers 前段**で即効レイテンシ改善
 
 <!--
 クロージング1枚目。ここはゆっくり読み上げる。
