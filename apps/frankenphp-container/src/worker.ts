@@ -130,7 +130,7 @@ export default {
     }
 
     // その他は PHP Container にフォワード
-    const container = getContainer(env.APP, 'php-8.4');
+    const container = getContainer(env.APP, 'php-8.4-r2');
     return container.fetch(request);
   },
 
@@ -144,7 +144,7 @@ export default {
    * 実行時間枠は: CPU 最大 5分 / wall clock 15分 (Queue Consumer の仕様)
    */
   async queue(batch: MessageBatch<JobPayload>, env: Env): Promise<void> {
-    const container = getContainer(env.APP, 'php-8.4');
+    const container = getContainer(env.APP, 'php-8.4-r2');
     for (const msg of batch.messages) {
       try {
         const res = await container.fetch(
