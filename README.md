@@ -9,7 +9,7 @@
 
 | ディレクトリ | アプローチ | ランタイム | 用途 |
 |---|---|---|---|
-| `apps/php-wasm-worker/` | **A: php-wasm** | Workers (V8 isolate) | 軽量 / WordPress系 |
+| `apps/php-wasm-worker/` | **A: php-wasm**（※現状は Worker デモ版、php-wasm 実行は未統合） | Workers (V8 isolate) | 軽量 / WordPress系 |
 | `apps/frankenphp-container/` | **B: Containers** | FrankenPHP on Cloudflare Containers | Laravel / 本番想定 |
 | （ドキュメントのみ） | **C: ハイブリッド** | Workers + 既存オリジン | 段階移行 |
 
@@ -34,15 +34,20 @@ cloudflare-php-demo/
 
 ### 1. php-wasm Worker（5分）
 
+> **注**: 現状は「3アプローチのデモランディング + Worker ランタイム情報を返すAPI」として動作します。
+> 実 PHP を Worker 内で実行するには `@php-wasm/universal` + PHPローダー `.wasm` のバンドル設定が別途必要で、TODOとしています。
+> 実 PHP 実行の動作確認は `apps/frankenphp-container/` 側で行います。
+
+デプロイは **GitHub Actions 経由**（`main` push で自動）。ローカルから `wrangler deploy` は叩きません。
+
 ```bash
+# ローカル開発サーバーのみ（デプロイは CI）
 cd apps/php-wasm-worker
 npm install
-npx wrangler login          # 初回のみ
 npm run dev                 # http://localhost:8787
-npm run deploy              # 本番デプロイ
 ```
 
-動作確認:
+デプロイ後の動作確認:
 ```bash
 curl https://<your-worker>.workers.dev/api/hello
 ```
@@ -50,17 +55,15 @@ curl https://<your-worker>.workers.dev/api/hello
 ### 2. FrankenPHP Container（10分）
 
 事前に Cloudflare Containers が有効化されている必要あり（`docs/manual-setup.md` 参照）。
+デプロイは **GitHub Actions 経由**。ローカルから `wrangler deploy` は叩きません。
 
 ```bash
 cd apps/frankenphp-container
 npm install
 
-# ローカル確認（Docker のみ）
+# ローカル Docker 確認のみ（デプロイは CI）
 npm run docker:build
 npm run docker:run          # http://localhost:8080/api/hello
-
-# Cloudflare にデプロイ
-npm run deploy
 ```
 
 ### 3. スライドをビルド
