@@ -4,11 +4,11 @@
   "private": true,
   "description": "Marp slides for PHPer Cloudflare talk",
   "scripts": {
-    "build": "marp slides.md -o slides.pdf --allow-local-files && marp slides.md -o slides.html --allow-local-files",
-    "build:pdf": "marp slides.md -o slides.pdf --allow-local-files",
-    "build:html": "marp slides.md -o slides.html --allow-local-files",
-    "serve": "marp -s .",
-    "watch": "marp -w slides.md"
+    "build": "npm run build:pdf && npm run build:html",
+    "build:pdf": "npx -y @marp-team/marp-cli@latest slides.md -o slides.pdf --allow-local-files",
+    "build:html": "npx -y @marp-team/marp-cli@latest slides.md -o slides.html --allow-local-files",
+    "serve": "npx -y @marp-team/marp-cli@latest -s .",
+    "watch": "npx -y @marp-team/marp-cli@latest -w slides.md"
   },
   "devDependencies": {
     "@marp-team/marp-cli": "^4.0.0"
