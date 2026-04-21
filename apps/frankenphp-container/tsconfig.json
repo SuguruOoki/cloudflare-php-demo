@@ -8,7 +8,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "lib": ["es2022"],
-    "types": ["@cloudflare/workers-types"]
+    "types": ["@cloudflare/workers-types/experimental"]
   },
   "include": ["src/**/*.ts"]
 }

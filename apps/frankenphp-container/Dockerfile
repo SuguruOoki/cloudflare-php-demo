@@ -8,14 +8,16 @@ RUN install-php-extensions \
     intl \
     bcmath \
     opcache \
-    zip
+    zip \
+    @composer
 
 WORKDIR /app
 
 # 依存関係を先にコピーしてキャッシュ効率を上げる
 COPY composer.json ./
+# このデモは vendor 不要なので install は任意（Laravel 等に差し替える際に活きる）
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts \
-    || true
+    --ignore-platform-reqs || true
 
 COPY . .
 
