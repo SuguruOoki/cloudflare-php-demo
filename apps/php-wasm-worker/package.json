@@ -1,0 +1,20 @@
+{
+  "name": "cloudflare-php-wasm-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PHP running on Cloudflare Workers via php-wasm",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "tail": "wrangler tail"
+  },
+  "dependencies": {
+    "@php-wasm/universal": "^1.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260101.0",
+    "typescript": "^5.4.0",
+    "wrangler": "^3.90.0"
+  }
+}

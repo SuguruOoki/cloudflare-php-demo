@@ -1,0 +1,19 @@
+{
+	# グローバル設定
+	frankenphp
+	order php_server before file_server
+	auto_https off
+}
+
+:8080 {
+	root * /app/public
+	encode zstd br gzip
+
+	# ヘルスチェック（Cloudflare Containers が叩く）
+	handle /healthz {
+		respond "ok" 200
+	}
+
+	# 通常の PHP 処理
+	php_server
+}

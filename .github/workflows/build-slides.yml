@@ -1,0 +1,39 @@
+name: Build Slides
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'slides/**'
+      - '.github/workflows/build-slides.yml'
+  pull_request:
+    paths:
+      - 'slides/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build slides (PDF + HTML)
+        run: |
+          cd slides
+          npx --yes @marp-team/marp-cli@latest slides.md -o slides.pdf --allow-local-files
+          npx --yes @marp-team/marp-cli@latest slides.md -o slides.html --allow-local-files
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: slides
+          path: |
+            slides/slides.pdf
+            slides/slides.html
+          retention-days: 30

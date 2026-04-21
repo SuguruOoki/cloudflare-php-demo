@@ -1,0 +1,30 @@
+node_modules/
+.wrangler/
+.dev.vars
+.DS_Store
+
+# Build outputs
+dist/
+build/
+slides/slides.pdf
+slides/slides.html
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+!.vscode/settings.json
+
+# env
+.env
+.env.local
+.env.*.local
+
+# PHP
+vendor/
+
+# Docker
+.dockerignore~

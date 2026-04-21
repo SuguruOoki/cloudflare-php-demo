@@ -1,0 +1,16 @@
+{
+  "name": "cloudflare-php-demo-slides",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Marp slides for PHPer Cloudflare talk",
+  "scripts": {
+    "build": "marp slides.md -o slides.pdf --allow-local-files && marp slides.md -o slides.html --allow-local-files",
+    "build:pdf": "marp slides.md -o slides.pdf --allow-local-files",
+    "build:html": "marp slides.md -o slides.html --allow-local-files",
+    "serve": "marp -s .",
+    "watch": "marp -w slides.md"
+  },
+  "devDependencies": {
+    "@marp-team/marp-cli": "^4.0.0"
+  }
+}
