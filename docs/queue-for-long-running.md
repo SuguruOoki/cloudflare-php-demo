@@ -90,6 +90,44 @@ PHPer のメンタルモデルでは **Laravel の Queue::push と同じ**。違
 | `retry_delay` | リトライまでの秒数（指数バックオフ有） | 60 |
 | `dead_letter_queue` | N回失敗後の退避先 | 必ず設定する |
 
+### `batch_size` / `batch_timeout` を深掘り
+
+この2つは「どういう粒度で Consumer を呼ぶか」を決める**最重要ダイヤル**。
+
+#### 配送条件
+```
+配送されるタイミング = (size に達する) OR (timeout が経過する) のどちらか先に来た方
+```
+
+| シナリオ（`size=10, timeout=30`）| 配送内容 |
+|---|---|
+| 10件が2秒で溜まる | **即配送**（timeout を待たない） |
+| 3件のまま30秒経過 | 30秒後に **3件だけで配送** |
+| 0件のまま | Consumer は呼ばれない（ゼロコスト） |
+
+#### トレードオフ
+
+```
+         ◀─ レイテンシ重視          スループット重視 ─▶
+size     小 (1-5)                   大 (50-100)
+timeout  短 (1-5s)                  長 (20-30s)
+コスト   高（Consumer 呼び出し多）   低（まとめ処理）
+用途     通知・チャット・速報        CSV一括・夜間集計・メール配信
+```
+
+#### 30秒 CPU 上限との相性
+
+- Consumer を **Worker で処理**する場合: `batch_size × 1件の処理時間 < 25秒` に収める
+- Consumer が **Container にフォワード**する場合: Worker 側の CPU 上限はほぼ消費しないので batch は大きめで OK
+
+#### 実務の出発点
+
+1. **`size=10, timeout=30`** で始める
+2. メトリクスで調整:
+   - Consumer invocation 数が多すぎる → 両方大きく
+   - ジョブ完了レイテンシが遅い → timeout を短く
+   - Container / 下流サービスが重い → size を小さく、concurrency を上げる
+
 ### DLQ も Queue として作成する
 
 DLQ も通常の Queue。事前に作成しておく:
