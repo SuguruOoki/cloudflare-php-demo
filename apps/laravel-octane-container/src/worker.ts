@@ -16,6 +16,18 @@ export class LaravelOctaneContainer extends Container<Env> {
   override onStop() {
     console.log('[LaravelOctaneContainer] Octane stopped');
   }
+
+  /**
+   * Laravel + Octane の boot は Caddy/FrankenPHP 単体に比べてやや時間がかかる
+   * (config/route キャッシュ済でも初回は 1-2 秒)。デフォルトの fetch() は
+   * start を待たず即時 forward するため Cloudflare 側で
+   * "container is not running" エラーが出ることがある。
+   * startAndWaitForPorts() で 8080 ポートの listen を待ってから forward する。
+   */
+  override async fetch(request: Request): Promise<Response> {
+    await this.startAndWaitForPorts();
+    return this.containerFetch(request);
+  }
 }
 
 export default {
