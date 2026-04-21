@@ -2,7 +2,7 @@ flowchart LR
     C[Client] -->|POST| PW[Producer<br/>Worker]
     PW -->|env.JOBS.send| CFQ[(Cloudflare<br/>Queues)]
     CFQ -->|batch delivery| CW[Consumer<br/>Worker]
-    CW --> PHP[重い PHP 処理<br/>30s × 再試行]
+    CW --> PHP["重い PHP 処理<br/>CPU 最大 5分<br/>wall 15分"]
 
     classDef client fill:#fff,stroke:#666
     classDef edge fill:#003682,stroke:#003682,color:#fff
