@@ -29,20 +29,44 @@ Cloudflare というキーワードで会場の反応を見る。
 
 ---
 
-## 自己紹介 & 今日話すこと
+![bg left:38% w:90%](./assets/profile.jpg)
 
-- 普段は Laravel / Symfony で Web 開発
-- 最近の関心: エッジコンピューティング × PHP
+## 自己紹介
 
-### 今日のゴール
-1. **Cloudflare で PHP が動く3つのアプローチ**を理解する
-2. どれを選ぶかの**判断軸**を持ち帰る
-3. 帰ったらすぐ **`wrangler deploy`** を試したくなる
+### スー
+
+- **所属**: MOSH 株式会社
+- **やってること**
+  - LaravelLiveJapan Core Staff
+  - Go-to-Market エンジニア
+  - 技術広報
+- **趣味**: お酒 / サウナ / アニメ / マンガ
+
+### よろしくお願いします 🍻
 
 <!--
-自己紹介は30秒で切り上げる。
+自己紹介は 30-40秒。
+LaravelLiveJapan Core Staff という肩書は PHPer 会場なら刺さる。
+「Go-to-Market エンジニア」は珍しいので一言添えてもよい。
+趣味は参加者とのアイスブレイクに使える（懇親会のフック）。
+-->
+
+---
+
+## 今日のゴール
+
+1. **Cloudflare で PHP が動く 3つのアプローチ**を理解する
+2. どれを選ぶかの **判断軸**を持ち帰る
+3. 帰ったらすぐ **`wrangler deploy`** を試したくなる
+
+### 本日のサンプル
+- GitHub: `github.com/SuguruOoki/cloudflare-php-demo`
+- Live: `cloudflare-php-container-demo.suguru-ohki.workers.dev`
+
+<!--
 「今日のゴール」を先に見せることで聴衆に「持ち帰り」を意識させる。
 ここで「すぐ試したくなる」と宣言することで、デモ回のコミットを作る。
+サンプルURLを先に出すと、興味ある人は手元で触りながら聞ける。
 -->
 
 ---
