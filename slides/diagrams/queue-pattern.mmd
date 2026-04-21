@@ -1,0 +1,15 @@
+flowchart TD
+    C[Client] -->|POST /api/heavy-job| PW[Producer Worker]
+    PW -->|env.JOBS.send| CFQ[(Cloudflare Queues)]
+    PW -.->|"202 Accepted<br/>+ jobId (100ms)"| C
+    CFQ -->|"batch delivery<br/>最大 100件 / 30秒"| CW[Consumer Worker<br/>/ Container]
+    CW --> PHP[重い PHP 処理<br/>30s × 再試行 可]
+
+    classDef client fill:#fff,stroke:#666
+    classDef edge fill:#003682,stroke:#003682,color:#fff
+    classDef q fill:#F38020,stroke:#F38020,color:#fff
+    classDef php fill:#777bb3,stroke:#4f5b93,color:#fff
+    class C client
+    class PW,CW edge
+    class CFQ q
+    class PHP php

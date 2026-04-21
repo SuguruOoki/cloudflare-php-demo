@@ -1,0 +1,15 @@
+flowchart TD
+    start([スタート]) --> Q1{Laravel 等<br/>フルスタックを<br/>動かしたい?}
+    Q1 -->|Yes| B[B: Containers<br/>+ FrankenPHP / Octane]
+    Q1 -->|No| Q2{既存オリジン<br/>あり?}
+    Q2 -->|Yes| C[C: ハイブリッド<br/>Workers 前段]
+    Q2 -->|No| A[A: php-wasm<br/>on Workers]
+
+    classDef q fill:#fff,stroke:#003682,stroke-width:2px
+    classDef a fill:#F38020,stroke:#F38020,color:#fff
+    classDef b fill:#003682,stroke:#003682,color:#fff
+    classDef c fill:#555,stroke:#333,color:#fff
+    class Q1,Q2 q
+    class A a
+    class B b
+    class C c

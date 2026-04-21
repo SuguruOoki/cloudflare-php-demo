@@ -24,6 +24,16 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Install slide deps (Marp + Mermaid CLI)
+        run: |
+          cd slides
+          npm install
+
+      - name: Render Mermaid diagrams -> SVG
+        run: |
+          cd slides
+          node build-diagrams.mjs
+
       - name: Build slides (PDF + HTML)
         run: |
           cd slides
