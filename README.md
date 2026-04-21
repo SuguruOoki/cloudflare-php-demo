@@ -10,7 +10,8 @@
 | ディレクトリ | アプローチ | ランタイム | 用途 |
 |---|---|---|---|
 | `apps/php-wasm-worker/` | **A: php-wasm**（※現状は Worker デモ版、php-wasm 実行は未統合） | Workers (V8 isolate) | 軽量 / WordPress系 |
-| `apps/frankenphp-container/` | **B: Containers** | FrankenPHP on Cloudflare Containers | Laravel / 本番想定 |
+| `apps/frankenphp-container/` | **B: Containers** (vanilla PHP) | FrankenPHP on Cloudflare Containers | 最小 PHP 実体デモ |
+| `apps/laravel-octane-container/` | **B': Laravel Octane** | FrankenPHP Worker モード + Octane | Laravel 本番想定 |
 | （ドキュメントのみ） | **C: ハイブリッド** | Workers + 既存オリジン | 段階移行 |
 
 ## 構成

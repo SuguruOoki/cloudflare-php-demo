@@ -1,0 +1,38 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cloudflare-laravel-octane-demo",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+
+  "containers": [
+    {
+      "class_name": "LaravelOctaneContainer",
+      "image": "./Dockerfile",
+      "max_instances": 5,
+      "instance_type": "basic",
+      "constraints": {
+        "regions": ["APAC"]
+      }
+    }
+  ],
+
+  "durable_objects": {
+    "bindings": [
+      {
+        "class_name": "LaravelOctaneContainer",
+        "name": "APP"
+      }
+    ]
+  },
+
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["LaravelOctaneContainer"]
+    }
+  ]
+}

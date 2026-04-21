@@ -1,0 +1,22 @@
+{
+  "name": "cloudflare-laravel-octane-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Laravel Octane running on Cloudflare Containers via FrankenPHP",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "tail": "wrangler tail",
+    "docker:build": "docker build -t cloudflare-laravel-octane-demo:local .",
+    "docker:run": "docker run -p 8080:8080 cloudflare-laravel-octane-demo:local"
+  },
+  "dependencies": {
+    "@cloudflare/containers": "^0.3.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260101.0",
+    "typescript": "^5.4.0",
+    "wrangler": "^4.84.0"
+  }
+}
