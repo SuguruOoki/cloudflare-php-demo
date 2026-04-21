@@ -9,6 +9,7 @@ style: |
   section { font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; }
   h1 { color: #F38020; }
   h2 { color: #003682; border-bottom: 2px solid #F38020; padding-bottom: 4px; }
+  h3 { color: #003682; padding-bottom: 4px; }
   code { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; }
   pre { background: #1e1e1e; color: #eee; padding: 16px; border-radius: 6px; font-size: 0.75em; }
   table { font-size: 0.8em; }
@@ -17,9 +18,7 @@ style: |
 ---
 
 # PHPer のための<br>Cloudflare 実戦入門
-## 「Cloudflareで PHP は動かない」は、もう古い
-
-20分 / 中級+ PHPer 向け
+### Cloudflareで PHP を動かしてみよう
 
 <!--
 掴み: 「今日の発表のゴールは、皆さんの PHP アプリの新しいデプロイ先を1つ増やすことです」
@@ -295,7 +294,7 @@ export default {
 ### FrankenPHP の特徴
 - **Caddy ベースの1バイナリ PHP サーバー**
 - PHP-FPM + Nginx の 2プロセス構成から解放
-- **Worker モード（Octane相当）**で常駐可能
+- **Worker モード（Octane相当）** で常駐可能
 
 ### Containers のコールドスタートを FrankenPHP の起動速度でカバー
 | 構成 | 起動時間 |
@@ -504,6 +503,35 @@ export default {
 実体験ベースのハマりポイントは中級者に一番刺さる。
 「あ、それ知りたかった」を取れれば勝ち。
 特に 1, 3 は Laravel/Symfony ユーザーが最初に踏む。
+-->
+
+---
+
+## 「パーツ無いじゃん」問題: 認証・メール
+
+### 🔐 認証
+| 選択肢 | 用途 |
+|---|---|
+| **Cloudflare Access**（Zero Trust） | 社内ツール / SSO / IdP 連携 |
+| **Laravel Sanctum / Breeze そのまま** | トークンを D1 / KV に置けば動く |
+| **Clerk / Auth0 / WorkOS** | マネージド（DX 重視） |
+
+### 📧 メール送信
+- **Cloudflare 単体で送信サービスは無い**（Email Routing は受信のみ）
+- → **外部 API を Workers / Container から HTTP で叩く**
+- **Resend** / Postmark / SendGrid / Amazon SES / Mailgun
+- Laravel は `MAIL_MAILER=resend` 等でドライバ差し替えのみ
+
+### 割り切り
+「足りないパーツ = **外部 API を HTTP で叩く**」
+PHP のエコシステムはそのまま活きる
+
+<!--
+PHPer が必ず聞きたくなる実務質問: 「認証は？」「メールは？」。
+Cloudflare 単体で完結しない事実を正直に出しつつ、
+"HTTP API で繋ぐだけ"という割り切りで不安を消す。
+Resend は最近 Laravel 公式ドライバも入り DX 最良。会場で一言推しても良い。
+Laravel Sanctum はトークン保存先を D1/KV に変えるだけでそのまま動く点を強調。
 -->
 
 ---
