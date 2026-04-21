@@ -483,7 +483,7 @@ Laravel等  │
 |---|:---:|:---:|:---:|
 | WordPress | ◎(Playground) | ◎ | ○ |
 | Laravel / Symfony | △ | **◎** | ◎ |
-| 長時間バッチ | ✗ | △(Queues併用) | ◎ |
+| 長時間バッチ | ✗ Queues 必須 | ○ Queues 併用 | ◎ |
 | ファイルアップロード | △(R2直結) | ◎ | ◎ |
 | WebSocket / リアルタイム | ✗ | ◎(DO連携) | ○ |
 | セッション | KV | DB/KV | 既存のまま |
@@ -510,6 +510,84 @@ Laravel等  │
 実体験ベースのハマりポイントは中級者に一番刺さる。
 「あ、それ知りたかった」を取れれば勝ち。
 特に 1, 3 は Laravel/Symfony ユーザーが最初に踏む。
+-->
+
+---
+
+## 30秒 CPU制限を越える: **Cloudflare Queues**
+
+### Workers の壁
+- 1リクエスト あたり **CPU 30秒** 上限（Paid / Free 10ms）
+- Wall clock も応答 15秒程度でクライアント切断
+- **PDF生成・動画変換・一括メール等は真正面から叩くと死ぬ**
+
+### 回避パターン: 投げて返す
+```
+  Client ──▶ [Producer Worker]
+                │ env.JOBS.send({ jobId, payload })
+                ▼
+         [Cloudflare Queues]
+                │ batch delivery (最大 100件 / 30秒)
+                ▼
+         [Consumer Worker / Container]
+                └ 重い PHP 処理（30s × 再試行 可）
+```
+
+- Producer は即 `202 Accepted` + `jobId` を返す → **ユーザー体感 100ms**
+- Consumer は**別プロセスで 30秒フル**使える、失敗時は自動リトライ + DLQ
+
+<!--
+PHPer の一番の懸念「Edge は長時間処理できないんでしょ？」に正面から答えるスライド。
+Producer/Consumer 分離 = 体感レイテンシ短縮 + 処理耐久性 の二兎を追える。
+"投げて返す" は Laravel の Queue::push と同じメンタルモデル、と言うと伝わりやすい。
+-->
+
+---
+
+## Queue 実装の最小コード（Producer + Consumer）
+
+**wrangler.jsonc**
+```jsonc
+"queues": {
+  "producers": [{ "binding": "JOBS", "queue": "php-heavy-jobs" }],
+  "consumers": [{
+    "queue": "php-heavy-jobs",
+    "max_batch_size": 10,
+    "max_batch_timeout": 30,
+    "max_retries": 3,
+    "dead_letter_queue": "php-heavy-jobs-dlq"
+  }]
+}
+```
+
+**Worker (Producer + Consumer 両建て)**
+```ts
+export default {
+  // Producer: 普通の HTTP エンドポイント
+  async fetch(req, env) {
+    const jobId = crypto.randomUUID();
+    await env.JOBS.send({ jobId, body: await req.json() });
+    return Response.json({ jobId, status: 'queued' }, { status: 202 });
+  },
+  // Consumer: Queue が呼ぶ
+  async queue(batch: MessageBatch, env) {
+    for (const msg of batch.messages) {
+      // Container にフォワード or D1 に結果書き込み
+      await env.APP.fetch(new Request('https://internal/process', {
+        method: 'POST', body: JSON.stringify(msg.body)
+      }));
+      msg.ack();
+    }
+  }
+};
+```
+**Laravel 側**: `QUEUE_CONNECTION=cloudflare`（カスタムドライバ）で `Queue::push(new Job)` が CF Queues に流れる
+
+<!--
+Producer と Consumer を 1 つの worker.ts にまとめられるのが実は Cloudflare Queues の強み。
+batch_size / batch_timeout / max_retries / DLQ の 4つ設定が本番運用のコア。
+Laravel ユーザーには「いつもの Queue::push がエッジで動く」で十分。
+時間が無ければこのスライドは流して次へ、質問が出たら深掘りで補足する。
 -->
 
 ---

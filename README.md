@@ -27,8 +27,13 @@ cloudflare-php-demo/
 │   ├── deploy-container.yml
 │   └── build-slides.yml
 └── docs/
-    └── manual-setup.md           # 手動セットアップ手順（必読）
+    ├── manual-setup.md           # 手動セットアップ手順（必読）
+    └── queue-for-long-running.md # 30秒CPU制限を越える: Cloudflare Queues 活用
 ```
+
+## 長時間処理をやりたいとき
+
+Workers は 1 リクエスト **CPU 30秒上限**。PDF生成・一括メール・動画変換等は **Cloudflare Queues** で Producer/Consumer に分離して回避する。詳細と実装例: [`docs/queue-for-long-running.md`](docs/queue-for-long-running.md)
 
 ## クイックスタート
 
