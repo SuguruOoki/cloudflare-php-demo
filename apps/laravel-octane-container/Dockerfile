@@ -9,6 +9,7 @@ RUN install-php-extensions \
     bcmath \
     opcache \
     zip \
+    pcntl \
     @composer
 
 WORKDIR /app
@@ -38,6 +39,9 @@ RUN cp .env.example .env \
  && sed -i 's|^DB_CONNECTION=.*|DB_CONNECTION=sqlite|' .env \
  && sed -i 's|^# *DB_DATABASE=.*|DB_DATABASE=/tmp/database.sqlite|' .env \
  && sed -i 's|^DB_DATABASE=.*|DB_DATABASE=/tmp/database.sqlite|' .env \
+ && sed -i 's|^SESSION_DRIVER=.*|SESSION_DRIVER=file|' .env \
+ && sed -i 's|^CACHE_STORE=.*|CACHE_STORE=file|' .env \
+ && sed -i 's|^QUEUE_CONNECTION=.*|QUEUE_CONNECTION=sync|' .env \
  && printf '\nOCTANE_SERVER=frankenphp\n' >> .env \
  && touch /tmp/database.sqlite \
  && php artisan key:generate --force
