@@ -1,9 +1,9 @@
-flowchart TD
-    start([スタート]) --> Q1{Laravel 等<br/>フルスタックを<br/>動かしたい?}
-    Q1 -->|Yes| B[B: Containers<br/>+ FrankenPHP / Octane]
+flowchart LR
+    start([START]) --> Q1{Laravel 等<br/>フルスタック?}
+    Q1 -->|Yes| B[B: Containers<br/>+ FrankenPHP]
     Q1 -->|No| Q2{既存オリジン<br/>あり?}
-    Q2 -->|Yes| C[C: ハイブリッド<br/>Workers 前段]
-    Q2 -->|No| A[A: php-wasm<br/>on Workers]
+    Q2 -->|Yes| C[C: ハイブリッド]
+    Q2 -->|No| A[A: php-wasm]
 
     classDef q fill:#fff,stroke:#003682,stroke-width:2px
     classDef a fill:#F38020,stroke:#F38020,color:#fff

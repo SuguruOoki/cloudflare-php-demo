@@ -1,11 +1,8 @@
 flowchart LR
-    B[Browser] -->|HTTP| W
-    subgraph W[Cloudflare Worker<br/>V8 isolate]
-        P[php-wasm<br/>+ .php files]
-    end
-    W --> D1[("D1<br/>(DB代替)")]
-    W --> R2[("R2<br/>(ファイル)")]
-    W --> KV[("KV<br/>(セッション)")]
+    B[Browser] -->|HTTP| W["Cloudflare Worker<br/>V8 isolate<br/>+ php-wasm"]
+    W --> D1[("D1<br/>DB代替")]
+    W --> R2[("R2<br/>ファイル")]
+    W --> KV[("KV<br/>セッション")]
 
     classDef edge fill:#003682,stroke:#003682,color:#fff
     classDef store fill:#F38020,stroke:#F38020,color:#fff

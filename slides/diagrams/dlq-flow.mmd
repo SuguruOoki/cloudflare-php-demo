@@ -1,16 +1,16 @@
-flowchart TD
-    P[Producer] --> Q[(Queue<br/>php-heavy-jobs)]
-    Q --> C[Consumer 処理]
-    C -->|✓ 成功| OK[ack → Queue から削除]
-    C -->|✗ 失敗| R{retry<br/>max_retries 回まで}
+flowchart LR
+    P[Producer] --> Q[(Queue)]
+    Q --> C[Consumer]
+    C -->|✓ 成功| OK[ack / 削除]
+    C -->|✗ 失敗| R{retry<br/>max_retries}
     R -->|成功| OK
-    R -->|全て失敗| DLQ[(DLQ<br/>php-heavy-jobs-dlq)]
+    R -->|全て失敗| DLQ[(DLQ<br/>退避)]
 
     classDef q fill:#F38020,stroke:#F38020,color:#fff
     classDef ok fill:#2a9d8f,stroke:#1b6b60,color:#fff
     classDef fail fill:#d62828,stroke:#8f1d1d,color:#fff
     classDef actor fill:#003682,stroke:#003682,color:#fff
-    class Q,DLQ q
+    class Q q
     class OK ok
     class DLQ fail
     class P,C actor

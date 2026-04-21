@@ -1,19 +1,8 @@
 flowchart LR
-    B[Browser] --> W[Cloudflare Worker<br/>エッジ層]
-    W -->|そのまま forward| O[既存 Laravel<br/>on EC2 / さくら]
-
-    subgraph role[Worker で担うこと]
-        direction TB
-        r1[認証チェック]
-        r2[キャッシュ]
-        r3[A/B テスト]
-        r4[ジオルーティング]
-    end
-    W -.-> role
+    B[Browser] --> W["Cloudflare Worker<br/>（エッジ層）<br/>認証 / キャッシュ<br/>A/B / ジオ"]
+    W -->|そのまま forward| O["既存 Laravel<br/>on EC2 / さくら"]
 
     classDef edge fill:#003682,stroke:#003682,color:#fff
-    classDef origin fill:#666,stroke:#333,color:#fff
-    classDef role fill:#fff,stroke:#F38020,stroke-dasharray: 5 5
+    classDef origin fill:#555,stroke:#333,color:#fff
     class W edge
     class O origin
-    class role role
