@@ -189,6 +189,60 @@ git push
 
 ---
 
+## Step 7.5. Queue / Email Service を有効化（任意）
+
+スライド S26-S28 で紹介した **Queue + DLQ** と **Cloudflare Email Service** を実際に動かしたい場合。現状はどちらも `apps/frankenphp-container/wrangler.jsonc` でコメントアウトされているので、以下で有効化する。
+
+### A. Queue + DLQ を有効化
+
+```bash
+cd apps/frankenphp-container
+
+# 本線と DLQ の2本を作成
+npx wrangler queues create php-heavy-jobs
+npx wrangler queues create php-heavy-jobs-dlq
+```
+
+次に `wrangler.jsonc` の `"queues": { ... }` ブロック（`// --- Queue + DLQ` の下）のコメントを解除。
+
+再デプロイ:
+```bash
+git add wrangler.jsonc && git commit -m "feat: enable queues binding" && git push
+```
+
+動作確認:
+```bash
+# Producer: ジョブ投入 (Worker の /api/enqueue が Queue に send)
+curl -X POST https://cloudflare-php-container-demo.<subdomain>.workers.dev/api/enqueue \
+  -H 'content-type: application/json' \
+  -d '{"payload":"hello"}'
+# → {"jobId":"...","status":"queued"} (202)
+
+# Consumer ログを見る: Queue → Worker.queue() → Container /process
+npx wrangler tail --format pretty
+```
+
+### B. Cloudflare Email Service を有効化
+
+1. [Cloudflare Dashboard → Email → Email Service](https://dash.cloudflare.com) で機能を有効化
+2. 送信元ドメイン（例: `example.com`）を verify（SPF / DKIM / DMARC が自動設定される）
+3. `wrangler.jsonc` の `"send_email": [...]` ブロック（`// --- Cloudflare Email Service` の下）のコメントを解除
+4. `worker.ts` の `from: { email: 'no-reply@example.com', ... }` を verify 済みドメインに書き換え
+5. `git push` で再デプロイ
+
+動作確認:
+```bash
+curl -X POST https://cloudflare-php-container-demo.<subdomain>.workers.dev/api/send-mail \
+  -H 'content-type: application/json' \
+  -d '{"to":"you@example.com","subject":"Test","text":"from CF Email Service"}'
+# → {"status":"sent"}
+```
+
+> 2026 年 4 月時点で Email Service は **public beta**、`Workers Paid` プランが必要です。
+> Laravel 公式ドライバはまだ未対応のため、Laravel から使うなら**この Worker エンドポイントを HTTP で叩く**構成にする。
+
+---
+
 ## Step 8. カスタムドメイン（任意）
 
 ### php-wasm Worker に独自ドメインを付ける

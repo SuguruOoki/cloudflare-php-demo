@@ -39,7 +39,39 @@
     }
   ]
 
-  // 必要に応じて有効化（未作成ならコメントのまま）
+  // ============================================================
+  // オプションバインディング: 有効化するときだけコメント解除する
+  // 詳細手順: docs/manual-setup.md 「Queue / Email Service を有効化」節
+  // ============================================================
+
+  // --- Queue + DLQ (スライド S26-S28 参照) ---
+  // 事前:
+  //   wrangler queues create php-heavy-jobs
+  //   wrangler queues create php-heavy-jobs-dlq
+  //
+  // "queues": {
+  //   "producers": [
+  //     { "binding": "JOBS", "queue": "php-heavy-jobs" }
+  //   ],
+  //   "consumers": [
+  //     {
+  //       "queue": "php-heavy-jobs",
+  //       "max_batch_size": 10,
+  //       "max_batch_timeout": 30,
+  //       "max_retries": 3,
+  //       "dead_letter_queue": "php-heavy-jobs-dlq"
+  //     }
+  //   ]
+  // },
+
+  // --- Cloudflare Email Service (スライド S26-S27 参照) ---
+  // 事前: Dashboard で Email Service を有効化し送信元ドメインを verify
+  //
+  // "send_email": [
+  //   { "name": "SEND_EMAIL" }
+  // ],
+
+  // --- 将来のオプション ---
   // "d1_databases": [
   //   { "binding": "DB", "database_name": "prod-db", "database_id": "REPLACE_ME" }
   // ],
