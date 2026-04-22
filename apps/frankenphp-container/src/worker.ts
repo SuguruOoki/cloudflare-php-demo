@@ -1,26 +1,24 @@
 import { Container, getContainer } from '@cloudflare/containers';
 import { handleSendMail, type SendEmailBinding } from './handlers/email';
+import { handleEnqueue, processBatch, type JobPayload } from './handlers/queue';
 
 /**
- * スライドで紹介した機能の実装:
- *   - Queue + DLQ: Producer(fetch /api/enqueue) / Consumer(queue handler)
- *   - Cloudflare Email Service: POST /api/send-mail で env.SEND_EMAIL.send()
- *     → ハンドラは src/handlers/email.ts に分離
+ * スライドで紹介した機能の入口:
+ *   - Queue + DLQ: src/handlers/queue.ts
+ *       Producer  POST /api/enqueue → handleEnqueue
+ *       Consumer  default.queue()   → processBatch
+ *   - Cloudflare Email Service: src/handlers/email.ts
+ *       POST /api/send-mail → handleSendMail
  *
- * 各バインディングは wrangler.jsonc で有効化するまでは undefined のため、
- * 未設定時はフレンドリーな 503 を返して deploy が壊れないようにしている。
- * アクティベート手順は docs/manual-setup.md 「Queue / Email Service を有効化」節参照。
+ * worker.ts はルーター / バインディング配線に徹する。
+ * 各バインディングは wrangler.jsonc で有効化するまで undefined のため、
+ * ハンドラ側で 503 + 活性化手順を返す。
+ * アクティベート手順は docs/manual-setup.md 「Queue / Email Service を有効化」節。
  */
-
-interface JobPayload {
-  jobId: string;
-  kind: string;
-  args?: Record<string, unknown>;
-}
 
 export interface Env {
   APP: DurableObjectNamespace<AppContainer>;
-  // ↓ スライド紹介機能: 必要に応じて wrangler.jsonc で有効化
+  // ↓ スライド紹介機能: wrangler.jsonc で有効化
   JOBS?: Queue<JobPayload>;
   SEND_EMAIL?: SendEmailBinding;
   // ↓ 将来オプション
@@ -43,23 +41,17 @@ export class AppContainer extends Container<Env> {
   }
 }
 
-function notConfigured(feature: string, howTo: string): Response {
-  return Response.json(
-    {
-      error: `${feature} is not configured on this deployment`,
-      how_to_enable: howTo,
-      docs: 'docs/manual-setup.md',
-    },
-    { status: 503 }
-  );
+/** PHP Container への stable な参照。name 固定で同じインスタンスに寄せる。 */
+function phpContainer(env: Env) {
+  return getContainer(env.APP, 'php-8.4-r2');
 }
 
 export default {
   /**
    * HTTP エントリポイント
    * - /_worker/healthz        Worker 生存確認
-   * - /api/enqueue            Queue Producer デモ
-   * - /api/send-mail          Cloudflare Email Service デモ (handlers/email.ts)
+   * - /api/enqueue            Queue Producer (handlers/queue.ts)
+   * - /api/send-mail          Email Service  (handlers/email.ts)
    * - その他                   Container の PHP にフォワード
    */
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -69,60 +61,26 @@ export default {
       return new Response('worker-ok', { status: 200 });
     }
 
-    // --- Queue Producer デモ ---
     if (url.pathname === '/api/enqueue') {
-      if (!env.JOBS) {
-        return notConfigured(
-          'Queue (JOBS binding)',
-          'wrangler queues create php-heavy-jobs && wrangler queues create php-heavy-jobs-dlq ' +
-            '→ wrangler.jsonc の "queues" ブロックのコメントを外す → deploy'
-        );
-      }
-      const jobId = crypto.randomUUID();
-      const body = await request.json<Record<string, unknown>>().catch(() => ({}));
-      await env.JOBS.send({ jobId, kind: 'demo-heavy-work', args: body });
-      return Response.json({ jobId, status: 'queued' }, { status: 202 });
+      return handleEnqueue(request, env.JOBS);
     }
 
-    // --- Cloudflare Email Service デモ ---
-    // 実装は src/handlers/email.ts に分離。バインディング有無の判定も向こう側で行う。
     if (url.pathname === '/api/send-mail' && request.method === 'POST') {
       return handleSendMail(request, env.SEND_EMAIL);
     }
 
-    // その他は PHP Container にフォワード
-    const container = getContainer(env.APP, 'php-8.4-r2');
-    return container.fetch(request);
+    return phpContainer(env).fetch(request);
   },
 
   /**
-   * Queue Consumer ハンドラ
+   * Queue Consumer
    *
-   * Queue に入ったメッセージを受け取り、PHP Container の /process に
-   * HTTP で POST して処理委譲する。
-   *
-   * 失敗時は msg.retry() で再試行 → max_retries 到達で DLQ に退避される。
-   * 実行時間枠は: CPU 最大 5分 / wall clock 15分 (Queue Consumer の仕様)
+   * Queue に入ったメッセージを processBatch() に委譲する。
+   * - 成功: msg.ack()
+   * - 失敗: msg.retry(delay) → max_retries 超で DLQ に退避
+   * 実行枠: CPU 最大 5分 / wall 最大 15分
    */
   async queue(batch: MessageBatch<JobPayload>, env: Env): Promise<void> {
-    const container = getContainer(env.APP, 'php-8.4-r2');
-    for (const msg of batch.messages) {
-      try {
-        const res = await container.fetch(
-          new Request('https://internal.invalid/process', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(msg.body),
-          })
-        );
-        if (!res.ok) {
-          throw new Error(`container /process returned ${res.status}`);
-        }
-        msg.ack();
-      } catch (err) {
-        console.error('[queue] job failed', msg.body, err);
-        msg.retry({ delaySeconds: 60 });
-      }
-    }
+    await processBatch(batch, phpContainer(env));
   },
 };
