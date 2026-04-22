@@ -4,9 +4,9 @@ flowchart LR
     CFQ -->|batch delivery| CW[Consumer<br/>Worker]
     CW --> PHP["重い PHP 処理<br/>CPU 最大 5分<br/>wall 15分"]
 
-    classDef client fill:#fff,stroke:#666
-    classDef edge fill:#003682,stroke:#003682,color:#fff
-    classDef q fill:#F38020,stroke:#F38020,color:#fff
+    classDef client fill:#fff,stroke:#1A202C,color:#1A202C
+    classDef edge fill:#1A202C,stroke:#1A202C,color:#fff
+    classDef q fill:#FF2D20,stroke:#BC002D,color:#fff
     classDef php fill:#777bb3,stroke:#4f5b93,color:#fff
     class C client
     class PW,CW edge

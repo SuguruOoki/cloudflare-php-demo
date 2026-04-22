@@ -2,7 +2,7 @@ flowchart LR
     B[Browser] --> W["Cloudflare Worker<br/>（エッジ層）<br/>認証 / キャッシュ<br/>A/B / ジオ"]
     W -->|そのまま forward| O["既存 Laravel<br/>on EC2 / さくら"]
 
-    classDef edge fill:#003682,stroke:#003682,color:#fff
-    classDef origin fill:#555,stroke:#333,color:#fff
+    classDef edge fill:#1A202C,stroke:#1A202C,color:#fff
+    classDef origin fill:#FF2D20,stroke:#BC002D,color:#fff
     class W edge
     class O origin

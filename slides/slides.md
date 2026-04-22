@@ -6,13 +6,19 @@ size: 16:9
 header: "PHPer のための Cloudflare 実戦入門"
 footer: "2026 / @SuguruOoki"
 style: |
-  section { font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; }
-  h1 { color: #F38020; }
-  h2 { color: #003682; border-bottom: 2px solid #F38020; padding-bottom: 4px; }
-  h3 { color: #003682; padding-bottom: 4px; }
-  code { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; }
+  /* Laravel Live Japan palette: 赤 #FF2D20 / 深赤 #BC002D / 黒 #1A202C */
+  section { font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; color: #1A202C; }
+  h1 { color: #FF2D20; }
+  h2 { color: #1A202C; border-bottom: 3px solid #FF2D20; padding-bottom: 4px; }
+  h3 { color: #BC002D; padding-bottom: 4px; }
+  strong { color: #BC002D; }
+  blockquote { border-left: 4px solid #FF2D20; padding-left: 12px; color: #1A202C; }
+  code { background: #fdecea; color: #BC002D; padding: 2px 6px; border-radius: 4px; }
   pre { background: #1e1e1e; color: #eee; padding: 16px; border-radius: 6px; font-size: 0.75em; }
+  pre code { background: transparent; color: inherit; }
   table { font-size: 0.8em; }
+  table th { background: #FF2D20; color: #fff; }
+  a { color: #FF2D20; }
   .small { font-size: 0.7em; color: #666; }
   .highlight { background: #fff3cd; padding: 2px 6px; border-radius: 4px; }
 ---

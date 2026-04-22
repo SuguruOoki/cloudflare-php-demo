@@ -18,13 +18,13 @@ const HTML = `<!doctype html>
   <meta charset="utf-8">
   <title>PHP on Cloudflare</title>
   <style>
-    body { font-family: system-ui, -apple-system, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 20px; line-height: 1.7; color: #222; }
-    h1 { color: #F38020; }
-    h2 { color: #003682; border-bottom: 2px solid #F38020; padding-bottom: 4px; margin-top: 32px; }
-    code { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
-    .tag { display: inline-block; background: #F38020; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; vertical-align: middle; }
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 20px; line-height: 1.7; color: #1A202C; }
+    h1 { color: #FF2D20; }
+    h2 { color: #1A202C; border-bottom: 3px solid #FF2D20; padding-bottom: 4px; margin-top: 32px; }
+    code { background: #fdecea; color: #BC002D; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+    .tag { display: inline-block; background: #FF2D20; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75em; vertical-align: middle; }
     ul li { margin: 6px 0; }
-    a { color: #003682; }
+    a { color: #FF2D20; }
   </style>
 </head>
 <body>
