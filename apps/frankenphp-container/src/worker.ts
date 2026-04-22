@@ -1,9 +1,11 @@
 import { Container, getContainer } from '@cloudflare/containers';
+import { handleSendMail, type SendEmailBinding } from './handlers/email';
 
 /**
  * スライドで紹介した機能の実装:
  *   - Queue + DLQ: Producer(fetch /api/enqueue) / Consumer(queue handler)
  *   - Cloudflare Email Service: POST /api/send-mail で env.SEND_EMAIL.send()
+ *     → ハンドラは src/handlers/email.ts に分離
  *
  * 各バインディングは wrangler.jsonc で有効化するまでは undefined のため、
  * 未設定時はフレンドリーな 503 を返して deploy が壊れないようにしている。
@@ -14,26 +16,6 @@ interface JobPayload {
   jobId: string;
   kind: string;
   args?: Record<string, unknown>;
-}
-
-/**
- * Cloudflare Email Service の send_email binding 型定義
- * @see https://developers.cloudflare.com/email-service/
- */
-interface EmailAddress {
-  email: string;
-  name?: string;
-}
-interface SendEmailBody {
-  to: EmailAddress[];
-  from: EmailAddress;
-  subject: string;
-  text?: string;
-  html?: string;
-  reply_to?: EmailAddress;
-}
-interface SendEmailBinding {
-  send(body: SendEmailBody): Promise<void>;
 }
 
 export interface Env {
@@ -77,7 +59,7 @@ export default {
    * HTTP エントリポイント
    * - /_worker/healthz        Worker 生存確認
    * - /api/enqueue            Queue Producer デモ
-   * - /api/send-mail          Cloudflare Email Service デモ
+   * - /api/send-mail          Cloudflare Email Service デモ (handlers/email.ts)
    * - その他                   Container の PHP にフォワード
    */
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -103,30 +85,9 @@ export default {
     }
 
     // --- Cloudflare Email Service デモ ---
+    // 実装は src/handlers/email.ts に分離。バインディング有無の判定も向こう側で行う。
     if (url.pathname === '/api/send-mail' && request.method === 'POST') {
-      if (!env.SEND_EMAIL) {
-        return notConfigured(
-          'Email Service (SEND_EMAIL binding)',
-          'Cloudflare Dashboard で Email Service を有効化し送信元ドメインを verify → ' +
-            'wrangler.jsonc の "send_email" ブロックのコメントを外す → deploy'
-        );
-      }
-      type MailReq = { to: string; subject: string; text?: string; html?: string };
-      const payload = await request.json<MailReq>().catch(() => null);
-      if (!payload?.to || !payload.subject) {
-        return Response.json(
-          { error: 'body must be {"to":"...","subject":"...","text":"..."}' },
-          { status: 400 }
-        );
-      }
-      await env.SEND_EMAIL.send({
-        to: [{ email: payload.to }],
-        from: { email: 'no-reply@example.com', name: 'CF PHP Demo' },
-        subject: payload.subject,
-        text: payload.text ?? '(empty)',
-        html: payload.html,
-      });
-      return Response.json({ status: 'sent' });
+      return handleSendMail(request, env.SEND_EMAIL);
     }
 
     // その他は PHP Container にフォワード
