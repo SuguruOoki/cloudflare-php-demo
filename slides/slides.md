@@ -440,17 +440,81 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 ```
 
-### Worker（前段）はキャッシュだけ担当
-- 認証チェックは **Laravel Sanctum** にそのまま任せる
-- Worker は Cache API で GET 結果のエッジキャッシュのみ
-- **既存の Sanctum / Passport / Breeze 資産をそのまま活用**
-
-**オリジン負荷が 30-70% 減るのが実感値**（キャッシュ効果）
+### 役割分担
+- **Laravel Sanctum** が認証を担当（既存資産そのまま）
+- **Worker** は**公開 GET のキャッシュ**のみ（= 認証 API は**触らない**）
 
 <!--
 Hybrid C はエッジ層と既存 Laravel の役割分担がキモ。
 認証は Sanctum が成熟しているので Laravel 側で完結、
-Worker 前段はキャッシュ/リダイレクト/ジオルーティング等の "軽い前捌き" に絞る。
+Worker 前段はキャッシュ / リダイレクト / ジオルーティング等の軽い前捌きに絞る。
+次ページでキャッシュの事故を防ぐ実装ガードを紹介。
+-->
+
+---
+
+## ⚠️ エッジキャッシュの落とし穴: 認証データ
+
+### 絶対避けたい事故
+- Worker が `GET /api/me` を **URL だけで**キャッシュ
+- User A の応答が **User B** にそのまま返る → **個人情報漏洩**
+
+### 安全な3パターン
+
+| 対象 | 戦略 |
+|---|---|
+| **公開 GET**（商品一覧など） | そのままキャッシュ OK |
+| **認証 GET**（自分のデータ） | `Authorization` / セッションあり → **キャッシュ bypass** |
+| **認証 GET を効かせたい稀ケース** | **cache key にユーザーIDを混ぜる**（`cf.cacheKey`） |
+
+### サーバー側でも Cache-Control を付ける
+```php
+// Laravel: 認証エンドポイントに必ず private
+return response()->json($data)
+    ->header('Cache-Control', 'private, no-store');
+```
+
+<!--
+この話を抜かすと「Cloudflare 使ったら情報漏洩した」系の事故につながる。
+Laravel 側で Cache-Control: private を付ける + Worker 側で Authorization 検知して bypass
+の二重防御が基本。
+リポジトリの apps/frankenphp-container/src/handlers/cache.ts に
+shouldBypassCache() / withEdgeCache() を実装済み。
+-->
+
+---
+
+## 🛡 Worker 側の安全なキャッシュ実装
+
+```ts
+// apps/frankenphp-container/src/handlers/cache.ts
+export function shouldBypassCache(req: Request): boolean {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return true;
+  if (req.headers.has('Authorization')) return true;       // ← 認証ありは bypass
+  const cookie = req.headers.get('Cookie') ?? '';
+  if (/laravel_session|auth/i.test(cookie)) return true;   // ← セッションも bypass
+  return false;
+}
+
+export async function withEdgeCache(req, origin) {
+  if (shouldBypassCache(req)) return origin(req);
+  const cache = caches.default;
+  const hit = await cache.match(req); if (hit) return hit;
+
+  const res = await origin(req);
+  const cc = res.headers.get('Cache-Control') ?? '';
+  if (/private|no-store/i.test(cc)) return res;            // ← private なら保存禁止
+  if (res.ok) await cache.put(req, res.clone());
+  return res;
+}
+```
+
+**三重ガード**: Method / 認証ヘッダ / レスポンスの `Cache-Control: private`
+
+<!--
+shouldBypassCache で「迷ったら bypass」の保守的ポリシー。
+withEdgeCache がエントリポイント。認証 API を気にせず差し込める設計。
+最後の Cache-Control チェックで Laravel 側からの明示ヒントも拾う。
 -->
 
 ---

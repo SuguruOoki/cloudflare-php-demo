@@ -1,6 +1,7 @@
 import { Container, getContainer } from '@cloudflare/containers';
 import { handleSendMail, type SendEmailBinding } from './handlers/email';
 import { handleEnqueue, processBatch, type JobPayload } from './handlers/queue';
+import { withEdgeCache } from './handlers/cache';
 
 /**
  * スライドで紹介した機能の入口:
@@ -69,7 +70,10 @@ export default {
       return handleSendMail(request, env.SEND_EMAIL);
     }
 
-    return phpContainer(env).fetch(request);
+    // PHP Container にフォワード。認証付きリクエストやセッション持ちは
+    // withEdgeCache が自動でキャッシュを bypass するので、別ユーザーの
+    // レスポンスが混ざる事故は起きない。公開 GET だけがエッジキャッシュされる。
+    return withEdgeCache(request, (req) => phpContainer(env).fetch(req));
   },
 
   /**
