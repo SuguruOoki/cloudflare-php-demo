@@ -1,4 +1,4 @@
-%%{init: {'theme':'base','themeVariables':{'primaryColor':'#FF2D20','primaryTextColor':'#fff','primaryBorderColor':'#BC002D','lineColor':'#1A202C','secondaryColor':'#1A202C','tertiaryColor':'#fff','edgeLabelBackground':'#fff','fontFamily':'Hiragino Kaku Gothic ProN, Meiryo, sans-serif'}}}%%
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#FF2D20','primaryTextColor':'#fff','primaryBorderColor':'#BC002D','lineColor':'#1A202C','secondaryColor':'#1A202C','tertiaryColor':'#fff','edgeLabelBackground':'#1A202C','fontFamily':'Hiragino Kaku Gothic ProN, Meiryo, sans-serif'}}}%%
 flowchart LR
     B[Browser] --> W["Cloudflare Worker<br/>（エッジ層）<br/>認証 / キャッシュ<br/>A/B / ジオ"]
     W -->|そのまま forward| O["既存 Laravel<br/>on EC2 / さくら"]
