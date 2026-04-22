@@ -42,8 +42,8 @@ Cloudflare というキーワードで会場の反応を見る。
 
 - **所属**: MOSH 株式会社
 - **やってること**
-  - LaravelLiveJapan Core Staff
-  - Go-to-Market エンジニア
+  - Laravel Live Japan Core Staff
+  - Go-to-Market / HROps / SalesOps あたりの自動化
   - 技術広報
 - **趣味**: お酒 / サウナ / アニメ / マンガ
 
@@ -155,7 +155,7 @@ R2 の egress 無料は地味にコスト面で大きいので強調する。
 
 ## 結論先出し: 3つのアプローチ
 
-| | **A. php-wasm** | **B. Containers** | **C. ハイブリッド** |
+| | A. php-wasm | B. Containers | C. ハイブリッド |
 |---|---|---|---|
 | 方式 | PHP を Wasm 化して Workers で実行 | FrankenPHP 等を Container で起動 | Workers はエッジ層、PHP は既存オリジン |
 | 代表例 | WordPress Playground | Laravel on Containers | Workers Cache + EC2/さくら |
@@ -570,9 +570,8 @@ DNS 自動は SES の手作業 SPF/DKIM/DMARC 経験者にウケる。
 
 ---
 
-## Cloudflare Email Service: Workers 実装例
+## Email Service ①: wrangler.jsonc 設定
 
-**wrangler.jsonc**
 ```jsonc
 {
   "send_email": [
@@ -581,14 +580,18 @@ DNS 自動は SES の手作業 SPF/DKIM/DMARC 経験者にウケる。
 }
 ```
 
+### Dashboard 側の一回作業
+- Email Service 機能を有効化
+- 送信元ドメインを **verify**（SPF / DKIM / DMARC は CF が自動設定）
+- **Workers Paid plan** が必要
+
 ---
 
-## Cloudflare Email Service: Workers 実装例
+## Email Service ②: Worker コード
 
-**Worker コード**
 ```ts
 export default {
-  async fetch(req: Request, env): Promise<Response> {
+  async fetch(req, env) {
     await env.SEND_EMAIL.send({
       to:      [{ email: 'user@example.com' }],
       from:    { email: 'no-reply@your-domain.com', name: 'MyApp' },
@@ -601,8 +604,7 @@ export default {
 };
 ```
 
-- Workers Paid plan で利用可 / DNS は初回に Cloudflare が自動設定
-- Laravel 側からは**HTTP コールまたは別プロセスから Worker エンドポイントを叩く**形に
+**API key・secret の管理不要**。Laravel からは **Worker を HTTP で叩く** 構成に。
 
 <!--
 API key も secret も管理不要で、env.SEND_EMAIL.send() 一発で送れるのは
