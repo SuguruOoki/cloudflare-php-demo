@@ -982,3 +982,98 @@ QAタイム。
 - 「既存 Laravel 何行変えた？」 → 基本 .env のみ、あってもサービスプロバイダ数行
 - 「MySQL 捨てるのキツい」 → ハイブリッド (C) から段階移行でOK
 -->
+
+---
+
+# 📎 Appendix<br>補足資料
+
+以降は登壇中は触れず、質問が来た時・資料配布で読む用。
+
+<!--
+ここから Appendix セクション。
+登壇では時間切れで触れないが、スライド配布後に読者が深掘りできるよう残す。
+-->
+
+---
+
+## A1: なぜ `Cache-Control: private, no-store` で共有キャッシュ回避できるか
+
+### これは Cloudflare 固有の魔法ではなく **HTTP 標準（RFC 9111）**
+
+`Cache-Control` は **origin → CDN / プロキシ / ブラウザ** への契約ヘッダ。Cloudflare も仕様に従うので、**Laravel で書くだけで効く**。
+
+| ディレクティブ | 意味 | 誰が禁止される？ |
+|---|---|---|
+| **`private`** | single-user 向け / 共有キャッシュ禁止 | **CDN / プロキシのみ**（ブラウザは OK） |
+| **`no-store`** | あらゆるキャッシュに保存禁止 | **全員**（ブラウザ含む） |
+| `public` | 共有キャッシュ OK | — |
+| `no-cache` | 保存OKだが毎回再検証 | — |
+
+→ `private, no-store` = **「共有キャッシュに入れるな」+「ブラウザにも持つな」** の二重指示
+
+<!--
+RFC 9111 の定義を要約。HTTP 標準なので Cloudflare に閉じた話じゃない点を強調。
+-->
+
+---
+
+## A2: Cloudflare での実処理順
+
+```
+[Laravel (Container)]
+  └ Response に Cache-Control: private, no-store
+        ↓
+[Cloudflare CDN 層]  ← ディレクティブ検出 → 保存スキップ
+        ↓
+[Workers の Cache API]  ← caches.default.put() も同仕様に従う
+        ↓
+[Browser]  ← no-store あるので保存しない
+```
+
+- Cloudflare は **デフォルトで仕様に従う**（書いた瞬間に効く）
+- `caches.default.put()` も **Cache API 仕様**に従い `no-store` を検知したら保存失敗
+
+<!--
+3層とも標準仕様を守るので、Laravel 側の1行で end-to-end 制御できる。
+-->
+
+---
+
+## A3: ⚠️ "破られる" ケースと二重防御
+
+### 契約が守られない稀なパターン
+1. **Cache Rules で "Cache Everything" 強制**（Enterprise 機能、設定ミス）
+2. **Worker コードで `Cache-Control` を剥がしてから `caches.default.put()`**
+3. 壊れた中間プロキシ
+
+### だから二重防御が正しい
+
+| 層 | 役割 |
+|---|---|
+| **Laravel**: `Cache-Control: private, no-store` | 標準契約で全レイヤに**一斉通知** |
+| **Worker**: `shouldBypassCache()` | 契約が破られる環境でも**そもそも put を呼ばせない** |
+
+<!--
+Laravel 側だけだと Cache Rules ミスで守れない。
+Worker 側だけだと Cloudflare 以外のキャッシュ層で漏れる可能性。
+両方揃って初めて全レイヤで漏れない。
+-->
+
+---
+
+## A4: 参考リンク
+
+- **RFC 9111: HTTP Caching**
+  - `private` / `no-store` の正式定義
+- **Cloudflare Cache docs** - `developers.cloudflare.com/cache/concepts/cache-control/`
+  - "Cloudflare respects the `Cache-Control` header for cacheability decisions by default"
+- **Cloudflare Workers Cache API** - `developers.cloudflare.com/workers/runtime-apis/cache/`
+  - `put()` の Cache API 仕様準拠の記述
+- **このリポジトリの実装** - `apps/frankenphp-container/src/handlers/cache.ts`
+  - `shouldBypassCache()` / `withEdgeCache()` / `safeCacheKey()`
+
+<!--
+配布後に読者が深掘りするための出発点。
+RFC と Cloudflare docs を押さえておけば、登壇中に突っ込まれても落ち着いて答えられる。
+-->
+
