@@ -4,15 +4,18 @@
   "private": true,
   "description": "Marp slides for PHPer Cloudflare talk",
   "scripts": {
-    "build": "npm run build:diagrams && npm run build:pdf && npm run build:pdf:v2 && npm run build:html",
+    "build": "npm run build:diagrams && npm run build:pdf && npm run build:pdf:v2 && npm run build:pdf:v3 && npm run build:html",
     "build:diagrams": "node build-diagrams.mjs",
     "build:pdf": "npm run build:diagrams && npx -y @marp-team/marp-cli@latest slides.md -o slides.pdf --allow-local-files",
     "build:pdf:v2": "npm run build:diagrams && npx -y @marp-team/marp-cli@latest slides-v2.md -o slides-v2.pdf --allow-local-files",
+    "build:pdf:v3": "npm run build:diagrams && npx -y @marp-team/marp-cli@latest slides-v3.md -o slides-v3.pdf --allow-local-files",
     "build:html": "npm run build:diagrams && npx -y @marp-team/marp-cli@latest slides.md -o slides.html --allow-local-files",
     "build:html:v2": "npm run build:diagrams && npx -y @marp-team/marp-cli@latest slides-v2.md -o slides-v2.html --allow-local-files",
+    "build:html:v3": "npm run build:diagrams && npx -y @marp-team/marp-cli@latest slides-v3.md -o slides-v3.html --allow-local-files",
     "serve": "npm run build:diagrams && npx -y @marp-team/marp-cli@latest -s .",
     "watch": "npx -y @marp-team/marp-cli@latest -w slides.md",
-    "watch:v2": "npx -y @marp-team/marp-cli@latest -w slides-v2.md"
+    "watch:v2": "npx -y @marp-team/marp-cli@latest -w slides-v2.md",
+    "watch:v3": "npx -y @marp-team/marp-cli@latest -w slides-v3.md"
   },
   "devDependencies": {
     "@marp-team/marp-cli": "^4.0.0",
