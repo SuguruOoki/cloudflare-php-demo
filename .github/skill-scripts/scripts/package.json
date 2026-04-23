@@ -1,0 +1,16 @@
+{
+  "name": "speakerdeck-publish",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Publish presentation PDF to SpeakerDeck via Playwright",
+  "type": "module",
+  "scripts": {
+    "login": "node login.mjs",
+    "publish": "node publish.mjs",
+    "update": "node update.mjs",
+    "install-browser": "npx playwright install chromium"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
+}

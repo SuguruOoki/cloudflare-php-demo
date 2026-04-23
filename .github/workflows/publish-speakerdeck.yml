@@ -1,0 +1,79 @@
+name: Publish Slides to SpeakerDeck
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'slides/slides-v3.md'
+      - 'slides/build-diagrams.mjs'
+      - 'slides/diagrams/**'
+      - 'slides/assets/**'
+      - '.github/workflows/publish-speakerdeck.yml'
+      - '.github/skill-scripts/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-speakerdeck
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Install slide deps
+        working-directory: slides
+        run: npm install
+
+      - name: Render Mermaid diagrams
+        working-directory: slides
+        run: node build-diagrams.mjs
+
+      - name: Build v3 PDF
+        working-directory: slides
+        run: npx --yes @marp-team/marp-cli@latest slides-v3.md -o slides-v3.pdf --allow-local-files
+
+      - name: Stage speakerdeck-publish scripts
+        run: |
+          mkdir -p .skill
+          cp -r .github/skill-scripts/* .skill/
+
+      - name: Install Playwright + Chromium
+        working-directory: .skill
+        run: |
+          npm init -y >/dev/null 2>&1 || true
+          npm install --no-save playwright@1
+          npx playwright install --with-deps chromium
+
+      - name: Publish / Update SpeakerDeck
+        env:
+          SPEAKERDECK_SESSION: ${{ secrets.SPEAKERDECK_SESSION }}
+          SPEAKERDECK_DECK_URL: ${{ secrets.SPEAKERDECK_DECK_URL }}
+          PDF_PATH: ${{ github.workspace }}/slides/slides-v3.pdf
+        working-directory: .skill
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SPEAKERDECK_SESSION:-}" ]; then
+            echo "::warning::SPEAKERDECK_SESSION secret is not set. Skipping publish."
+            echo "Run 'node scripts/login.mjs' locally, then base64-encode"
+            echo ".session/speakerdeck.json and save it as the SPEAKERDECK_SESSION secret."
+            exit 0
+          fi
+
+          if [ -z "${SPEAKERDECK_DECK_URL:-}" ]; then
+            echo "[publish] No existing deck URL. Creating a new deck..."
+            node scripts/publish.mjs --pdf "$PDF_PATH" | tee /tmp/deck-url.txt
+            echo "::notice::Created a new deck. Save the URL above as SPEAKERDECK_DECK_URL secret to enable auto-update."
+          else
+            echo "[publish] Updating existing deck: $SPEAKERDECK_DECK_URL"
+            node scripts/update.mjs --deck-url "$SPEAKERDECK_DECK_URL" --pdf "$PDF_PATH"
+          fi
