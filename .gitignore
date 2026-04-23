@@ -8,6 +8,8 @@ dist/
 build/
 slides/slides.pdf
 slides/slides.html
+slides/slides-v2.pdf
+slides/slides-v2.html
 
 # Logs
 *.log

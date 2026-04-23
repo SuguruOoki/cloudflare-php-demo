@@ -6,8 +6,14 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => response()->json([
     'message' => 'Laravel Octane on Cloudflare Containers',
     'try' => [
-        '/api/hello',
-        '/api/octane',
+        'public' => [
+            'GET  /api/hello',
+            'GET  /api/octane',
+        ],
+        'auth' => [
+            'POST /api/login (email: demo@example.com / password: demo-password)',
+            'GET  /api/me   (Authorization: Bearer <token>)',
+        ],
     ],
 ]));
 

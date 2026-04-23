@@ -21,10 +21,18 @@ RUN rm -rf /app/* /app/.[!.]* 2>/dev/null || true
 RUN composer create-project --prefer-dist laravel/laravel . --no-interaction --no-scripts \
  && composer require laravel/octane --no-interaction --no-scripts
 
-# デモ用の上書きファイル（Counter / Provider / Route）
+# Sanctum を有効化（routes/api.php / HasApiTokens / migration を publish）
+RUN php artisan install:api --no-interaction
+
+# デモ用の上書きファイル（Counter / Provider / User / Bootstrap / Routes / Seeder）
+# NOTE: routes/api.php と User.php は install:api のあとに COPY して上書きする
 COPY app/Services/RequestCounter.php   app/Services/RequestCounter.php
 COPY app/Providers/AppServiceProvider.php app/Providers/AppServiceProvider.php
+COPY app/Models/User.php app/Models/User.php
+COPY bootstrap/app.php bootstrap/app.php
 COPY routes/web.php routes/web.php
+COPY routes/api.php routes/api.php
+COPY database/seeders/DemoUserSeeder.php database/seeders/DemoUserSeeder.php
 
 # 依存解決 + オートロード最適化
 RUN composer install --no-dev --optimize-autoloader --no-interaction
@@ -45,6 +53,10 @@ RUN cp .env.example .env \
  && printf '\nOCTANE_SERVER=frankenphp\n' >> .env \
  && touch /tmp/database.sqlite \
  && php artisan key:generate --force
+
+# DB 初期化 + デモユーザー投入（Sanctum の personal_access_tokens テーブルも作成される）
+RUN php artisan migrate --force \
+ && php artisan db:seed --class=DemoUserSeeder --force
 
 # config / route / view キャッシュ（Octane のベストプラクティス）
 RUN php artisan config:cache \
