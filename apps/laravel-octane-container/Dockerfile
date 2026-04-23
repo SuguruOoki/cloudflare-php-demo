@@ -58,9 +58,10 @@ RUN cp .env.example .env \
 RUN php artisan migrate --force \
  && php artisan db:seed --class=DemoUserSeeder --force
 
-# config / route / view キャッシュ（Octane のベストプラクティス）
+# config / view キャッシュ（Octane のベストプラクティス）
+# NOTE: route:cache は install:api 後に Sanctum + api.php が解決できず 404 を
+# 招くケースがあったため外している。Octane 常駐なので実質的な性能影響は小さい。
 RUN php artisan config:cache \
- && php artisan route:cache \
  && (php artisan view:cache || true)
 
 EXPOSE 8080
