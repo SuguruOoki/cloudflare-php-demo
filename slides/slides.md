@@ -4,7 +4,7 @@ theme: default
 paginate: true
 size: 16:9
 header: "PHPer のための Cloudflare 実戦入門"
-footer: "2026 / @SuguruOoki"
+footer: "@SuguruOoki"
 style: |
   /* Laravel Live Japan palette: 赤 #FF2D20 / 深赤 #BC002D / 黒 #1A202C */
   section { font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; color: #1A202C; }

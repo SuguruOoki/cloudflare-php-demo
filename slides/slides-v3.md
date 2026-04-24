@@ -82,7 +82,8 @@ style: |
 
 - **MOSH 株式会社**
 - **Laravel Live Japan Core Staff**
-- Go-to-Market / HROps 自動化 / 技術広報
+- GoToMarket / HROps / SalesOps / 技術広報
+- https://blog.sue-san.dev
 
 ### よろしくお願いします 🍻
 
@@ -382,7 +383,7 @@ curl -sI $URL/api/me -H "Authorization: Bearer $TOKEN" | grep -i cache-control
 # → Cache-Control: no-store, private
 ```
 
-**Sanctum がそのまま動く** × **`Cache-Control` で CDN キャッシュ禁止** → でも **もしこれが無かったら？** 次へ
+**Sanctum がそのまま動く** × **`Cache-Control` で CDN キャッシュ禁止** → でも **もしこれが無かったら？**
 
 <!--
 [12:45 - 14:15] 1:30で演出する認証APIデモ。
@@ -565,6 +566,32 @@ Rule of 3 を守って、各行を大きく見せる。
 
 ---
 
+## 🎤 Laravel Live Japan のご紹介
+
+### 🇯🇵 日本唯一の Laravel 専門カンファレンス
+
+- 📅 **2026年 5月26日（火）〜 27日（水）** 開催
+- **Taylor Otwell** も来日実績、海外コミッター登壇常連
+- **Octane / Livewire / Inertia / Reverb** の深掘り Day
+
+### 💡 関西 PHPer にこそ来てほしい3つの理由
+
+1. **関西からの登壇枠が毎年複数** — 東京一極集中じゃない
+2. **前夜祭で Laravel 本家コアコミッターから日本語で一次情報**
+3. **Core Staff 募集中**（関西リモート大歓迎 🙋）
+
+### 🔗 [laravellive.jp](https://laravellive.jp) / [@LaravelLiveJP](https://x.com/LaravelLiveJP)
+
+#### 関西 PHP 勉強会の延長線に、もう一段深い Laravel コミュニティがあります 🍻
+
+<!--
+[19:40 - 20:15] ここは30-45秒で軽く。
+「Core Staff 募集」は実際に声かけてもらう導線。
+関西PHPカンファとの重複感なく、Laravelに振り切ったイベントとしての位置づけを強調。
+-->
+
+---
+
 ## 🚀 今夜の 5 分で、あなたの Laravel が330都市に
 
 ```bash
@@ -677,7 +704,7 @@ if (/laravel_session|auth/i.test(cookie)) return bypass();
 
 ---
 
-## B0: Cloudflare Mail Transport 実装
+## B0-①: Cloudflare Mail Transport — 準備と登録
 
 ### 1. 必要ライブラリ
 ```bash
@@ -686,6 +713,7 @@ composer require symfony/http-client
 ※ Laravel 標準の `Http::` ファサードが内部で利用
 
 ### 2. Transport 登録
+
 ```php
 // AppServiceProvider::boot
 Mail::extend('cloudflare', fn () => new CloudflareMailTransport(
@@ -693,16 +721,34 @@ Mail::extend('cloudflare', fn () => new CloudflareMailTransport(
 ));
 ```
 
-### 3. Transport 実装
+→ 実装クラスは次ページ（B0-②）
+
+---
+
+## B0-②: Cloudflare Mail Transport — 実装クラス
+
 ```php
 // app/Mail/Transports/CloudflareMailTransport.php
+namespace App\Mail\Transports;
+
+use Symfony\Component\Mailer\Transport\AbstractTransport;
+use Symfony\Component\Mailer\SentMessage;
+use Illuminate\Support\Facades\Http;
+
 class CloudflareMailTransport extends AbstractTransport
 {
     public function __construct(private string $workerUrl) {}
 
     protected function doSend(SentMessage $message): void
     {
-        Http::post($this->workerUrl, ['raw' => $message->toString()])->throw();
+        Http::post($this->workerUrl, [
+            'raw' => $message->toString(),
+        ])->throw();
+    }
+
+    public function __toString(): string
+    {
+        return 'cloudflare';
     }
 }
 ```
