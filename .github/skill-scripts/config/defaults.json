@@ -1,8 +1,0 @@
-{
-  "title": "PHPer、Cloudflare に引っ越す 〜あなたの Laravel を世界330都市で動かすまで〜",
-  "description": "Laravel Live Japan 2026 登壇資料。PHPer 向けに Cloudflare Workers / Containers / Queues で Laravel を動かす3つのアプローチ（php-wasm / FrankenPHP Container / ハイブリッド）を、ライブデモと実運用ノウハウ付きで解説。\n\nGitHub: https://github.com/SuguruOoki/cloudflare-php-demo\nLive Demo: https://cloudflare-laravel-octane-demo.suguru-ohki.workers.dev",
-  "tags": "php,laravel,cloudflare,containers,octane,frankenphp,edge,workers",
-  "visibility": "public",
-  "category": "technology",
-  "downloads": false
-}
